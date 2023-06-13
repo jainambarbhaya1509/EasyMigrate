@@ -24,7 +24,7 @@ async function connectToPostgreSQL() {
 // Disconnect from PostgreSQL Database
 async function disconnectFromPostgreSQL() {
   try {
-    await pool.end();
+    pool.end();
     console.log('Disconnected from PostgreSQL');
   } catch (error) {
     console.error('Error disconnecting from PostgreSQL:', error);
