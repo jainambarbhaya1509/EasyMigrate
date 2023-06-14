@@ -1,7 +1,5 @@
 const xlsx = require("xlsx");
 const { Pool } = require("pg");
-const fs = require("fs");
-const path = require("path");
 
 // PostgreSQL Server Information
 const pool = new Pool({
@@ -9,7 +7,7 @@ const pool = new Pool({
   host: "localhost",
   database: "test",
   password: "admin",
-  port: 5432
+  port: 5432,
 });
 
 // Connect to PostgreSQL Database
@@ -34,7 +32,6 @@ async function disconnectFromPostgreSQL() {
 
 // Read data from excel file
 async function readExcel(filePath) {
-
   const workbook = xlsx.readFile(filePath);
   const tableNames = workbook.SheetNames;
   console.log("Table Names: ", tableNames)
@@ -58,33 +55,34 @@ async function readExcel(filePath) {
 
     console.log(`Table: ${tableName}`);
     console.log(row);
-
-    // Emptying the row list for new sheet
-    row = [];
   }
   console.log(rows);
 
-  
+  for (let i = 0; i < tableNames.length; i++) {
+    const tableName = tableNames[i];
+    const tableRows = rows[i].map((columnName) => `${columnName} text`).join(", ");
+    await createTable(tableName, tableRows); 
+  }
 }
 
 async function createTable(tableName, tableRows) {
   try {
     const client = await pool.connect();
-    const query = `CREATE TABLE IF NOT EXISTS public.${tableName}(${tableRows})`;
-
+    const query = `CREATE TABLE IF NOT EXISTS public.${tableName} ( ${tableRows} );`;
     await client.query(query);
+    console.log(tableName , " Query: ", query)
     console.log(`Table ${tableName} created in the database`);
+    console.log("----------------------------")
     client.release();
   } catch (error) {
     console.error('Error creating table:', error);
   }
 }
 
-
 // Main function
 async function main() {
   await connectToPostgreSQL();
-  await readExcel("C:/Users/Jainam Barbhaya/Desktop/Migration Package/Files/student data.xlsx");
+  await readExcel("C:/Users/Jainam Barbhaya/Desktop/Migration Package/Files/student.xlsx");
   await disconnectFromPostgreSQL();
 }
 
