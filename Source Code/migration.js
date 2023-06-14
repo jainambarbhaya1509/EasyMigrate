@@ -34,17 +34,15 @@ async function disconnectFromPostgreSQL() {
 
 // Read data from excel file
 async function readExcel(filePath) {
-  const workbook = xlsx.readFile(filePath);
-  const sheetNames = workbook.SheetNames;
 
-  // Get the lowercase and underscored version of the file name
-  const tableName = path.basename(filePath).toLowerCase().replace(/\s/g, '_').replace(path.extname(path.basename(filePath)), "");
-  console.log("Table Name: ", tableName);
+  const workbook = xlsx.readFile(filePath);
+  const tableNames = workbook.SheetNames;
+  console.log("Table Names: ", tableNames)
 
   let rows = [];
 
-  for (const sheetName of sheetNames) {
-    const worksheet = workbook.Sheets[sheetName];
+  for (const tableName of tableNames) {
+    const worksheet = workbook.Sheets[tableName];
     const range = xlsx.utils.decode_range(worksheet['!ref']);
 
     let row = [];
@@ -57,8 +55,8 @@ async function readExcel(filePath) {
 
     // Pushing columns name of each sheet into rows list for mapping
     rows.push(row);
-    
-    console.log(`Sheet: ${sheetName}`);
+
+    console.log(`Table: ${tableName}`);
     console.log(row);
 
     // Emptying the row list for new sheet
