@@ -58,26 +58,64 @@ async function readExcel(filePath) {
   }
   console.log(rows);
 
+  // Loop for creating table schema
   for (let i = 0; i < tableNames.length; i++) {
     const tableName = tableNames[i];
-    const tableRows = rows[i].map((columnName) => `${columnName} text`).join(", ");
-    await createTable(tableName, tableRows); 
+    const tableCols = rows[i].map((columnName) => `${columnName} text`).join(", ");
+    await createTable(tableName, tableCols);
   }
+
+  // // Loop for inserting data to the table
+  // for (let i = 0; i < tableNames.length; i++) {
+  //   const tableName = tableNames[i];
+  //   const tableCols = rows[i].map((columnName) => `${columnName}`).join(", ");
+  //   const worksheet = workbook.Sheets[tableName];
+  //   const tableData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+  //   console.log(1);
+  //   tableData.shift();
+  //   console.log(2)
+
+  //   await insertData(tableName, tableCols, tableData);
+
+  //   console.log(3)
+  // }
 }
 
-async function createTable(tableName, tableRows) {
+// Create table query for sheets in excel file
+async function createTable(tableName, tableCols) {
   try {
     const client = await pool.connect();
-    const query = `CREATE TABLE IF NOT EXISTS public.${tableName} ( ${tableRows} );`;
+    const query = `CREATE TABLE IF NOT EXISTS public.${tableName} ( ${tableCols} );`;
     await client.query(query);
-    console.log(tableName , " Query: ", query)
+    console.log(tableName, " Create Table Query: ", query)
+    console.log();
     console.log(`Table ${tableName} created in the database`);
     console.log("----------------------------")
+    console.log();
     client.release();
   } catch (error) {
     console.error('Error creating table:', error);
   }
 }
+
+async function insertData(tableName, tableCols, tableData) {
+  try {
+    console.log(4)
+    const client = await pool.connect()
+    console.log(5)
+    const query = `INSERT INTO ${tableName} ( ${tableCols} ) VALUES ( ${tableData} );`;
+    console.log(query)
+    await client.query(query);
+    console.log(7)
+    console.log("Resord inserted in table ", tableName);
+    console.log("----------------------------------------")
+    console.log()
+    client.release();
+  } catch (error) {
+    console.error("Error inserting data ", error);
+  }
+}
+
 
 // Main function
 async function main() {
