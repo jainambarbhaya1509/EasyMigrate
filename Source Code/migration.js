@@ -1,5 +1,6 @@
 const xlsx = require("xlsx");
 const { Pool } = require("pg");
+const fs = require("fs");
 
 // PostgreSQL Server Information
 const pool = new Pool({
@@ -42,7 +43,8 @@ async function readExcel(filePath) {
     const worksheet = workbook.Sheets[tableName];
     const range = xlsx.utils.decode_range(worksheet['!ref']);
 
-    let row = [];
+    let row = []; //Emptying list for new sheet
+
     for (let c = range.s.c; c <= range.e.c; c++) {
       const cellAddress = xlsx.utils.encode_cell({ r: range.s.r, c });
       const cellValue = worksheet[cellAddress] ? worksheet[cellAddress].v : '';
@@ -99,7 +101,7 @@ async function insertData(tableName, tableCols, records) {
     await client.query(query);
     client.release();
   } catch (error) {
-    console.error("Error inserting data ", error);  
+    console.error("Error inserting data ", error);
   }
 }
 
