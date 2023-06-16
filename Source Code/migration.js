@@ -61,24 +61,22 @@ async function readExcel(filePath) {
   // Loop for creating table schema
   for (let i = 0; i < tableNames.length; i++) {
     const tableName = tableNames[i];
-    const tableCols = rows[i].map((columnName) => `${columnName} text`).join(", ");
+    const tableCols = rows[i].map((columnName) => `${columnName} text`).join(", "); // Replace text with function which will determine the datatype of column
     await createTable(tableName, tableCols);
   }
 
-  // // Loop for inserting data to the table
-  // for (let i = 0; i < tableNames.length; i++) {
-  //   const tableName = tableNames[i];
-  //   const tableCols = rows[i].map((columnName) => `${columnName}`).join(", ");
-  //   const worksheet = workbook.Sheets[tableName];
-  //   const tableData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
-  //   console.log(1);
-  //   tableData.shift();
-  //   console.log(2)
-
-  //   await insertData(tableName, tableCols, tableData);
-
-  //   console.log(3)
-  // }
+  // Loop for inserting data to the table
+  for (let i = 0; i < tableNames.length; i++) {
+    const tableName = tableNames[i];
+    const tableCols = rows[i].map((columnName) => `${columnName}`).join(", ");
+    const worksheet = workbook.Sheets[tableName];
+    const tableData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+    tableData.shift();
+    for (const record of tableData) {
+      await insertData(tableName, tableCols, record);
+    }  
+    console.log(tableData.length, " Record Inserted in ", tableName);
+  }
 }
 
 // Create table query for sheets in excel file
@@ -98,23 +96,19 @@ async function createTable(tableName, tableCols) {
   }
 }
 
-async function insertData(tableName, tableCols, tableData) {
+async function insertData(tableName, tableCols, record) {
   try {
-    console.log(4)
     const client = await pool.connect()
-    console.log(5)
-    const query = `INSERT INTO ${tableName} ( ${tableCols} ) VALUES ( ${tableData} );`;
-    console.log(query)
+    const values = record.map((col) => `'${col}'`).join(", ");                          // Use conditional operator to check weather value is number of text also make only 1 insert query for all records
+    const query = `INSERT INTO ${tableName} ( ${tableCols} ) VALUES ( ${values} );`;
     await client.query(query);
-    console.log(7)
-    console.log("Resord inserted in table ", tableName);
-    console.log("----------------------------------------")
     console.log()
     client.release();
   } catch (error) {
     console.error("Error inserting data ", error);
   }
 }
+
 
 
 // Main function
