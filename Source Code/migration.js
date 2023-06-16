@@ -72,10 +72,8 @@ async function readExcel(filePath) {
     const worksheet = workbook.Sheets[tableName];
     const tableData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
     tableData.shift();
-    for (const record of tableData) {
-      await insertData(tableName, tableCols, record);
-    }  
-    console.log(tableData.length, " Record Inserted in ", tableName);
+    await insertData(tableName, tableCols, tableData);
+    console.log(tableData.length, " Records Inserted in ", tableName);
   }
 }
 
@@ -85,31 +83,25 @@ async function createTable(tableName, tableCols) {
     const client = await pool.connect();
     const query = `CREATE TABLE IF NOT EXISTS public.${tableName} ( ${tableCols} );`;
     await client.query(query);
-    console.log(tableName, " Create Table Query: ", query)
-    console.log();
     console.log(`Table ${tableName} created in the database`);
-    console.log("----------------------------")
-    console.log();
     client.release();
   } catch (error) {
     console.error('Error creating table:', error);
   }
 }
 
-async function insertData(tableName, tableCols, record) {
+// Query to insert data into the table
+async function insertData(tableName, tableCols, records) {
   try {
-    const client = await pool.connect()
-    const values = record.map((col) => `'${col}'`).join(", ");                          // Use conditional operator to check weather value is number of text also make only 1 insert query for all records
-    const query = `INSERT INTO ${tableName} ( ${tableCols} ) VALUES ( ${values} );`;
+    const client = await pool.connect();
+    const values = records.map((record) => `(${record.map((col) => `'${col}'`).join(", ")})`).join(", ");
+    const query = `INSERT INTO ${tableName} (${tableCols}) VALUES ${values};`;
     await client.query(query);
-    console.log()
     client.release();
   } catch (error) {
-    console.error("Error inserting data ", error);
+    console.error("Error inserting data ", error);  
   }
 }
-
-
 
 // Main function
 async function main() {
