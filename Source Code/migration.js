@@ -62,6 +62,7 @@ async function readExcel(filePath) {
   console.log(rows);
 
   // Asking user for datatype
+  let dts = [];
   for (let i = 0; i < tableNames.length; i++) {
     let dt = []
     const tableName = tableNames[i];
@@ -69,15 +70,16 @@ async function readExcel(filePath) {
     console.log(tableName)
     for (let col of tableCols) {
       col = prompt(`${col}: `)
-      dt.push(col);
+      dt.push(col || 'text');
     }
+    dts.push(dt)
     console.log(dt)
   }
 
   // Loop for creating table schema
   for (let i = 0; i < tableNames.length; i++) {
     const tableName = tableNames[i];
-    const tableCols = rows[i].map((columnName) => `${columnName} text`).join(", ");
+    const tableCols = rows[i].map((columnName, index) => `${columnName} ${dts[i][index]}`).join(", ");
     await createTable(tableName, tableCols);
   }
 
@@ -98,6 +100,7 @@ async function createTable(tableName, tableCols) {
   try {
     const client = await pool.connect();
     const query = `CREATE TABLE IF NOT EXISTS public.${tableName} ( ${tableCols} );`;
+    console.log(query);
     await client.query(query);
     console.log(`Table ${tableName} created in the database`);
     client.release();
@@ -128,3 +131,5 @@ async function main() {
 
 // Call the main function
 main();
+
+// Error to insert date as datatype
