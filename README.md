@@ -1,2 +1,2 @@
 # Migration-Package
-Migration Package for Internship
+Migration Package to migrate Excel Data to PostgreSQL Database.
