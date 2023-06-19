@@ -1,6 +1,8 @@
 const xlsx = require("xlsx");
 const { Pool } = require("pg");
 const fs = require("fs");
+const readline = require("readline");
+const { resolve } = require("path");
 
 // PostgreSQL Server Information
 const pool = new Pool({
@@ -60,10 +62,16 @@ async function readExcel(filePath) {
   }
   console.log(rows);
 
+  // Creating interface to read column datatype
+  const dataType = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
   // Loop for creating table schema
   for (let i = 0; i < tableNames.length; i++) {
     const tableName = tableNames[i];
-    const tableCols = rows[i].map((columnName) => `${columnName} text`).join(", "); // Replace text with function which will determine the datatype of column
+    const tableCols = rows[i].map((columnName) => `${columnName} text`).join(", ");
     await createTable(tableName, tableCols);
   }
 
