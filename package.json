@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "pg": "^8.11.0",
+    "prompt-sync": "^4.2.0",
     "xlsx": "^0.18.5"
   }
 }
