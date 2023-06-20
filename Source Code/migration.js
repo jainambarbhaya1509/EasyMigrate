@@ -90,7 +90,6 @@ async function readExcel(filePath) {
     const tableCols = rows[i].map((columnName) => `${columnName}`).join(", ");
     const worksheet = workbook.Sheets[tableName];
     const tableData = xlsx.utils.sheet_to_json(worksheet, {header: 1, raw: false, dateNF: 'yyyy-mm-dd'});
-    console.log(tableData)
     tableData.shift();
     await insertData(tableName, tableCols, tableData);
     console.log(tableData.length, " Records Inserted in ", tableName);
@@ -115,8 +114,19 @@ async function createTable(tableName, tableCols) {
 async function insertData(tableName, tableCols, records) {
   try {
     const client = await pool.connect();
-    const values = records.map((record) => `(${record.map((row) => `'${row}'`).join(", ")})`).join(", ");
+    const values = records.map((record) => {
+      const sanitizedRecord = record.map((row) => {
+        // Check if cell value is empty and assign a default value
+        if (row === "") {
+          return "null";
+        } else {
+          return `'${row}'`;
+        }
+      });
+      return `(${sanitizedRecord.join(", ")})`;
+    }).join(", ");
     const query = `INSERT INTO ${tableName} (${tableCols}) VALUES ${values};`;
+    console.log(query);
     await client.query(query);
     client.release();
   } catch (error) {
@@ -124,10 +134,11 @@ async function insertData(tableName, tableCols, records) {
   }
 }
 
+
 // Main function
 async function main() {
   await connectToPostgreSQL();
-  await readExcel("C:/Users/Jainam Barbhaya/Desktop/Migration Package/Files/SampleData.xlsx");
+  await readExcel("C:/Users/Jainam Barbhaya/Desktop/employee.xlsx");
   await disconnectFromPostgreSQL();
 }
 
