@@ -40,6 +40,7 @@ async function readExcel(filePath) {
 
   let rows = [];
 
+  // Retrieving column names form 
   for (const tableName of tableNames) {
     const worksheet = workbook.Sheets[tableName];
     const range = xlsx.utils.decode_range(worksheet['!ref']);
@@ -53,7 +54,7 @@ async function readExcel(filePath) {
       row.push(column);
     }
 
-    // Pushing columns name of each sheet into rows list for mapping
+    // Adding columns name of each sheet into rows list for mapping
     rows.push(row);
 
     console.log(`Table: ${tableName}`);
@@ -67,7 +68,7 @@ async function readExcel(filePath) {
     let dt = []
     const tableName = tableNames[i];
     const tableCols = rows[i].map((columnName) => `${columnName}`);
-    console.log(tableName)
+    console.log("Enter Datatype & Constraints of: ", tableName)
     for (let col of tableCols) {
       col = prompt(`${col}: `)
       dt.push(col || 'text');
@@ -88,11 +89,12 @@ async function readExcel(filePath) {
     const tableName = tableNames[i];
     const tableCols = rows[i].map((columnName) => `${columnName}`).join(", ");
     const worksheet = workbook.Sheets[tableName];
-    const tableData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+    const tableData = xlsx.utils.sheet_to_json(worksheet, {header: 1, raw: false, dateNF: 'yyyy-mm-dd'});
+    console.log(tableData)
     tableData.shift();
     await insertData(tableName, tableCols, tableData);
     console.log(tableData.length, " Records Inserted in ", tableName);
-  }
+  }  
 }
 
 // Create table query for sheets in excel file
@@ -113,23 +115,21 @@ async function createTable(tableName, tableCols) {
 async function insertData(tableName, tableCols, records) {
   try {
     const client = await pool.connect();
-    const values = records.map((record) => `(${record.map((col) => `'${col}'`).join(", ")})`).join(", ");
+    const values = records.map((record) => `(${record.map((row) => `'${row}'`).join(", ")})`).join(", ");
     const query = `INSERT INTO ${tableName} (${tableCols}) VALUES ${values};`;
     await client.query(query);
     client.release();
   } catch (error) {
-    console.error("Error inserting data ", error);
+    console.error("Error inserting data: ", error);
   }
 }
 
 // Main function
 async function main() {
   await connectToPostgreSQL();
-  await readExcel("C:/Users/Jainam Barbhaya/Desktop/Migration Package/Files/student.xlsx");
+  await readExcel("C:/Users/Jainam Barbhaya/Desktop/Migration Package/Files/SampleData.xlsx");
   await disconnectFromPostgreSQL();
 }
 
 // Call the main function
 main();
-
-// Error to insert date as datatype
